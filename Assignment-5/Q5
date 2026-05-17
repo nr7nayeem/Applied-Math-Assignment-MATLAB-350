@@ -1,1 +1,56 @@
+clc; clear;
 
+C = [3 5 7 6;
+     2 5 8 2;
+     3 6 9 2];
+
+X = [5 20 25 0;
+     15 0 0 60;
+     0 0 25 0];
+
+[m,n] = size(C);
+
+while true
+    
+    % Step 1: compute u and v
+    u = NaN(m,1);
+    v = NaN(n,1);
+    u(1) = 0;
+    
+    for k = 1:m+n
+        for i = 1:m
+            for j = 1:n
+                if X(i,j) > 0
+                    if ~isnan(u(i)) && isnan(v(j))
+                        v(j) = C(i,j) - u(i);
+                    elseif isnan(u(i)) && ~isnan(v(j))
+                        u(i) = C(i,j) - v(j);
+                    end
+                end
+            end
+        end
+    end
+    
+    % Step 2: reduced cost
+    delta = zeros(m,n);
+    for i = 1:m
+        for j = 1:n
+            if X(i,j) == 0
+                delta(i,j) = C(i,j) - (u(i) + v(j));
+            end
+        end
+    end
+    
+    % Step 3: check optimality
+    if all(delta(:) >= 0)
+        disp('Optimal solution reached');
+        break;
+    end
+    
+    % (pivoting step not fully implemented in skeleton)
+    disp('Iteration needed (pivot step required)');
+    break;
+end
+
+disp('Final cost matrix:');
+disp(delta);
