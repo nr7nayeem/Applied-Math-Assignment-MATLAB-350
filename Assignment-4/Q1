@@ -1,1 +1,55 @@
+clc;
+clear;
+close all;
 
+%% Given Data
+T = [2 4 6 8 10 20 40 60 80 100 150 250 350 500 1000 1400]; % Temperature (K)
+K = [46 300 820 1560 2300 5000 3500 2100 1350 900 400 190 120 75 30 20]; % Thermal conductivity (W/m-K)
+
+%% (a) Plot k vs T on log-log scale
+figure;
+loglog(T, K, 'o', 'MarkerSize',8, 'LineWidth',1.5);
+grid on;
+xlabel('Temperature T (K)');
+ylabel('Thermal Conductivity k (W/m-K)');
+title('Thermal Conductivity vs Temperature (log-log scale)');
+
+%% (b) Curve-fit with quadratic in log-log space
+% Convert data to log10
+x = log10(T);  % log T
+y = log10(K);  % log k
+
+% Design matrix for quadratic fit: y = a*x^2 + b*x + c
+X = [x'.^2, x', ones(length(x),1)];
+
+% Solve for coefficients [a; b; c] using least squares
+coeff = X\y';
+
+a = coeff(1);
+b = coeff(2);
+c = coeff(3);
+
+% Display coefficients
+fprintf('Quadratic fit coefficients in log-log space:\n');
+fprintf('a = %.5f\n', a);
+fprintf('b = %.5f\n', b);
+fprintf('c = %.5f\n', c);
+
+% Write the fitted equation
+fprintf('\nEquation for k(T):\n');
+fprintf('k = 10^( %.5f*(log10(T))^2 + %.5f*log10(T) + %.5f )\n', a, b, c);
+
+%% Generate smooth curve for fitted equation
+T_fine = linspace(min(T), max(T), 200);
+k_fit = 10.^( a*(log10(T_fine).^2) + b*log10(T_fine) + c );
+
+%% Plot data points and curve-fitted equation together
+figure;
+loglog(T, K, 'ro', 'MarkerSize',8,'LineWidth',1.5); % Original data points
+hold on;
+loglog(T_fine, k_fit, 'b-', 'LineWidth',2);          % Fitted curve
+grid on;
+xlabel('Temperature T (K)');
+ylabel('Thermal Conductivity k (W/m-K)');
+title('Curve-Fit of Thermal Conductivity vs Temperature');
+legend('Original Data','Quadratic Fit','Location','NorthWest');
