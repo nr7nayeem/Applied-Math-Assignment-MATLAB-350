@@ -1,1 +1,58 @@
+% Maxwell-Boltzmann Speed Distribution
+clear; clc; close all;
 
+
+R = 8.31;              
+M = 0.032;              
+v = 0:1:3000;          
+T_array = [100, 300, 600, 1000]; 
+
+v_p_all = [0 0 0 0];
+P_vp_all =[0 0 0 0];
+
+figure 
+hold on;
+
+% --- Plot Distributions ---
+for i = 1:length(T_array)
+    T = T_array(i);
+    
+    % Maxwell-Boltzmann distribution function
+    coeff = 4 * pi * (M / (2 * pi * R * T))^(1.5);
+    exponent = - (M * v.^2) / (2 * R * T);
+    Pv = coeff * (v.^2) .* exp(exponent);
+    
+   
+    plot(v, Pv, 'LineWidth', 2, 'DisplayName', ['T = ', num2str(T), ' K']);
+    
+    
+    v_p = sqrt((2 * R * T) / M);
+    
+    
+    coeff1 = 4 * pi * (M / (2 * pi * R * T))^(1.5);
+    exponent1 = - (M * v_p.^2) / (2 * R * T);
+    P_vp = coeff1 * (v_p.^2) .* exp(exponent1);
+    
+    
+    v_p_all(i) = v_p;
+    P_vp_all(i) = P_vp;
+end
+
+
+plot(v_p_all, P_vp_all, 'ko', 'MarkerFaceColor', 'k',  'DisplayName', 'Peak Points');
+
+plot(v_p_all, P_vp_all, 'k--', 'LineWidth', 1.5, 'DisplayName', 'v_p Trend Line');
+
+
+xlabel('Speed, v (m/s)');
+ylabel('Probability Density, P(v) (s/m)');
+title('Maxwell Speed Distribution at Different Temperatures', 'FontSize', 14);
+grid on;
+legend
+
+
+
+disp('Most probable speeds (v_p) for each temperature:');
+for i = 1:length(T_array)
+    fprintf('At T = %d K: v_p = %.2f m/s\n', T_array(i), v_p_all(i));
+end
