@@ -1,1 +1,156 @@
+clc;
+clear;
 
+% ================= PARAMETERS =================
+omega = 7.29e-5;
+la = 39.9611*pi/180;
+g = 9.81;
+L = 10;
+
+k = 2*omega*sin(la);
+c = g/L;
+
+% ================= TIME =================
+h = 0.01;
+t = 0:h:20000;
+n = length(t);
+
+% ================= INITIAL CONDITIONS =================
+x = zeros(1,n); vx = zeros(1,n);
+y = zeros(1,n); vy = zeros(1,n);
+
+x(1)=1; vx(1)=0;
+y(1)=0; vy(1)=0;
+
+% ======================================================
+% 1. MODIFIED EULER (HEUN)
+x1=x; vx1=vx; y1=y; vy1=vy;
+
+for i=1:n-1
+    f1=vx1(i);
+    f2=k*vy1(i)-c*x1(i);
+    f3=vy1(i);
+    f4=k*vx1(i)-c*y1(i);
+
+    xp=x1(i)+h*f1;
+    vxp=vx1(i)+h*f2;
+    yp=y1(i)+h*f3;
+    vyp=vy1(i)+h*f4;
+
+    x1(i+1)=x1(i)+h/2*(f1+vxp);
+    vx1(i+1)=vx1(i)+h/2*(f2+(k*vyp-c*xp));
+    y1(i+1)=y1(i)+h/2*(f3+vyp);
+    vy1(i+1)=vy1(i)+h/2*(f4+(k*vxp-c*yp));
+end
+
+theta1 = unwrap(atan2(y1,x1));
+idx1 = find(abs(theta1)>=pi/4,1);
+t1 = safeTime(idx1,t);
+
+% ======================================================
+% 2. TAYLOR METHOD (2nd order)
+x2=x; vx2=vx; y2=y; vy2=vy;
+
+for i=1:n-1
+    ax = k*vy2(i)-c*x2(i);
+    ay = k*vx2(i)-c*y2(i);
+
+    jx = k*(k*vx2(i)-c*y2(i)) - c*vx2(i);
+    jy = k*(k*vy2(i)-c*x2(i)) - c*vy2(i);
+
+    x2(i+1)=x2(i)+h*vx2(i)+0.5*h^2*ax;
+    vx2(i+1)=vx2(i)+h*ax+0.5*h^2*jx;
+
+    y2(i+1)=y2(i)+h*vy2(i)+0.5*h^2*ay;
+    vy2(i+1)=vy2(i)+h*ay+0.5*h^2*jy;
+end
+
+theta2 = unwrap(atan2(y2,x2));
+idx2 = find(abs(theta2)>=pi/4,1);
+t2 = safeTime(idx2,t);
+
+% ======================================================
+% 3. RK4 METHOD
+x3=x; vx3=vx; y3=y; vy3=vy;
+
+f = @(x,vx,y,vy)[
+    vx;
+    k*vy-c*x;
+    vy;
+    k*vx-c*y];
+
+for i=1:n-1
+    k1=f(x3(i),vx3(i),y3(i),vy3(i));
+    k2=f(x3(i)+h/2*k1(1),vx3(i)+h/2*k1(2),y3(i)+h/2*k1(3),vy3(i)+h/2*k1(4));
+    k3=f(x3(i)+h/2*k2(1),vx3(i)+h/2*k2(2),y3(i)+h/2*k2(3),vy3(i)+h/2*k2(4));
+    k4=f(x3(i)+h*k3(1),vx3(i)+h*k3(2),y3(i)+h*k3(3),vy3(i)+h*k3(4));
+
+    x3(i+1)=x3(i)+h/6*(k1(1)+2*k2(1)+2*k3(1)+k4(1));
+    vx3(i+1)=vx3(i)+h/6*(k1(2)+2*k2(2)+2*k3(2)+k4(2));
+    y3(i+1)=y3(i)+h/6*(k1(3)+2*k2(3)+2*k3(3)+k4(3));
+    vy3(i+1)=vy3(i)+h/6*(k1(4)+2*k2(4)+2*k3(4)+k4(4));
+end
+
+theta3 = unwrap(atan2(y3,x3));
+idx3 = find(abs(theta3)>=pi/4,1);
+t3 = safeTime(idx3,t);
+
+% ======================================================
+% 4. PREDICTOR-CORRECTOR
+x4=x; vx4=vx; y4=y; vy4=vy;
+
+for i=1:n-1
+    x_pred = x4(i) + h*vx4(i);
+    vx_pred = vx4(i) + h*(k*vy4(i)-c*x4(i));
+    y_pred = y4(i) + h*vy4(i);
+    vy_pred = vy4(i) + h*(k*vx4(i)-c*y4(i));
+
+    x4(i+1)=x4(i)+h/2*(vx4(i)+vx_pred);
+    vx4(i+1)=vx4(i)+h/2*((k*vy4(i)-c*x4(i))+(k*vy_pred-c*x_pred));
+
+    y4(i+1)=y4(i)+h/2*(vy4(i)+vy_pred);
+    vy4(i+1)=vy4(i)+h/2*((k*vx4(i)-c*y4(i))+(k*vx_pred-c*y_pred));
+end
+
+theta4 = unwrap(atan2(y4,x4));
+idx4 = find(abs(theta4)>=pi/4,1);
+t4 = safeTime(idx4,t);
+
+% ======================================================
+% 5. ODE45 (BUILT-IN)
+X0 = [1;0;0;0];
+
+opts = odeset('RelTol',1e-9,'AbsTol',1e-9);
+
+[t_ode,X] = ode45(@(t,X) foucaultODE(t,X,k,c), [0 20000], X0, opts);
+
+x_ode = X(:,1);
+y_ode = X(:,3);
+
+theta_ode = unwrap(atan2(y_ode,x_ode));
+
+idx_ode = find(abs(theta_ode)>=pi/4,1);
+t_ode45 = t_ode(idx_ode);
+
+% ================= RESULTS =================
+fprintf('Modified Euler 45° time = %.7f s\n', t1);
+fprintf('Taylor 2nd order 45° time = %.7f s\n', t2);
+fprintf('RK4 45° time = %.7f s\n', t3);
+fprintf('Predictor-Corrector 45° time = %.7f s\n', t4);
+fprintf('ODE45 45° time = %.7f s\n', t_ode45);
+
+% ================= FUNCTIONS =================
+function dX = foucaultODE(~,X,k,c)
+x = X(1); vx = X(2);
+y = X(3); vy = X(4);
+
+dX = [vx; k*vy - c*x; vy ; k*vx - c*y];
+end
+
+function t_out = safeTime(idx,t)
+if isempty(idx)
+    t_out = NaN;
+else
+    t_out = t(idx);
+end
+end
