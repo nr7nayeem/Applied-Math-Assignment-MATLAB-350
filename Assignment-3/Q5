@@ -1,1 +1,119 @@
+clc;
+clear;
+close all;
 
+%% ==============================
+%% Parameters
+%% ==============================
+L = 10;
+x_table = 0:0.5:L;                     % spatial points for table
+materials = {'Silver','Copper','Aluminum','Cast Iron'};
+a2 = [1.71 1.14 0.86 0.12];           % diffusivities
+t_values = [1 10 20];                  % times for table
+N_table = 50;                           % Fourier terms for table
+N_plot = 3;                             % first 3 Fourier terms for surface
+
+%% ==============================
+%% (a) & (b) Temperature Tables
+%% ==============================
+for ti = 1:length(t_values)
+    
+    t = t_values(ti);
+    fprintf('\nTemperature Table at t = %g\n', t);
+    
+    % initialize table
+    T = zeros(length(x_table), length(a2));
+    
+    %% Loop over materials
+    for mi = 1:length(a2)
+        
+        %% Loop over positions x
+        for xi = 1:length(x_table)
+            
+            sum_series = 0;
+            
+            %% Fourier series sum
+            for n = 1:N_table
+                coeff = (( (-1)^n*3 -1 )/n);
+                term = coeff * sin(n*pi*x_table(xi)/L) * exp(-(a2(mi)*n^2*pi^2*t)/100);
+                sum_series = sum_series + term;
+            end
+            
+            % Total temperature
+            u = 10 + 2*x_table(xi) + (20/pi)*sum_series;
+            T(xi,mi) = u;
+        end
+    end
+    
+    % Display table
+    table_result = array2table(T,'VariableNames',materials);
+   
+    disp(table_result)
+end                                                                                                                                 
+
+%% ==============================
+%% (c) Surface Plot (first 3 Fourier terms)
+%% ==============================
+x = linspace(0,L,100);           % spatial points for surface
+t = linspace(0,20,100);          % time points for surface
+[X,T_mesh] = meshgrid(x,t);
+
+for mi = 1:length(a2)
+    
+    U = zeros(size(X));
+    
+    for xi = 1:length(x)
+        for ti = 1:length(t)
+            
+            sum_series = 0;
+            for n = 1:N_plot
+                coeff = ((-1)^n*3 -1)/n;
+                sum_series = sum_series + ...
+                    coeff * sin(n*pi*X(ti,xi)/L) * exp(-a2(mi)*n^2*pi^2*T_mesh(ti,xi)/100);
+            end
+            
+            U(ti,xi) = 10 + 2*X(ti,xi) + (20/pi)*sum_series;
+        end
+    end
+    
+    % Surface plot
+    figure;
+    surf(X,T_mesh,U)
+    shading interp
+    xlabel('x')
+    ylabel('t')
+    zlabel('Temperature u(x,t)')
+    title(['Temperature Surface - ', materials{mi}, ' (First 3 Fourier Terms)'])
+    colorbar
+    view(135,30)
+end
+
+%% ==============================
+%% (d) Time for Centre to reach 15 units
+%% ==============================
+x_c = L/2;        % centre of rod
+target = 15;      % desired temperature
+dt = 0.01;        % time step for iteration
+
+fprintf('\nTime required for centre of rod to reach 15 units:\n');
+
+for mi = 1:length(a2)
+    
+    t_curr = 0;
+    u_c = 0;
+    
+    while u_c < target
+        
+        sum_series = 0;
+        for n = 1:N_table
+            coeff = ((-1)^n*3 -1)/n;
+            term = coeff * sin(n*pi*x_c/L) * exp(-(a2(mi)*n^2*pi^2*t_curr)/100);
+            sum_series = sum_series + term;
+        end
+        
+        u_c = 10 + 2*x_c + (20/pi)*sum_series;
+        t_curr = t_curr + dt;
+    end
+    
+    fprintf('%s: %.3f units of time\n', materials{mi}, t_curr)
+end
