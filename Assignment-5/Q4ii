@@ -1,1 +1,31 @@
+clc; clear;
 
+C = [3 5 7 6;
+     2 5 8 2;
+     3 6 9 2];
+
+s = [50; 75; 25];
+d = [20 20 50 60];
+
+[m,n] = size(C);
+X = zeros(m,n);
+T = C;
+
+while any(s) && any(d)
+    [~,k] = min(T(:));
+    [i,j] = ind2sub(size(T),k);
+
+    x = min(s(i), d(j));
+    X(i,j) = x;
+
+    s(i) = s(i) - x;
+    d(j) = d(j) - x;
+
+    if s(i)==0, T(i,:) = inf; end
+    if d(j)==0, T(:,j) = inf; end
+end
+
+cost = sum(sum(X.*C));
+
+disp(X)
+fprintf('Total Cost = %d\n', cost);
