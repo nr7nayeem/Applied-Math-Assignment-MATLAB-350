@@ -1,0 +1,41 @@
+clc;
+clear;
+close all;
+
+%% Parameters
+a = 5;
+b = 4;
+T1 = 80;
+
+%% Grid
+x = linspace(0,a,100);
+y = linspace(0,b,100);
+[X,Y] = meshgrid(x,y);
+
+%% Number of terms in series
+N = 20;
+
+%% Initialize temperature
+T = zeros(size(X));
+
+%% Fourier Series Computation
+for n = 1:N
+    
+    m = 2*n - 1;
+    
+    T = T + ( sin(m*pi*X/a) .* sinh(m*pi*Y/a) ) ./( m * sinh(m*pi*b/a) );
+    
+end
+
+T = (4*T1/pi) * T;
+
+%% Plot
+figure
+surfc(X,Y,T)
+shading interp
+xlabel('x (m)')
+ylabel('y (m)')
+zlabel('Temperature (°C)')
+title('Temperature Distribution in Rectangular Plate')
+colorbar
+view(45,30)
