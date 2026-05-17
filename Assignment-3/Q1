@@ -1,82 +1,60 @@
-%%iii
-clc; clear; close all;
+clc;
+clear;
+close all;
 
-[x,y] = meshgrid(linspace(0,3,200));
-R = (x.*y >= 1);
+%% Given Data
+v0 = 250;          % initial speed (m/s)
+theta = 65;        % angle (degree)
+g = 9.81;          % gravity (m/s^2)
 
-contourf(x,y,R,5)
-axis equal
-hold on
+x0 = 3000;         % initial x
+y0 = 0;            % initial y
+z0 = 0;            % initial z
 
-% Two valid points
-A = [1,1];
-B = [1.9,0.5];
+wind = -30;        % west direction (m/s)
 
-% Line
-t = linspace(0,1,100);
-X = t*A(1) + (1-t)*B(1);
-Y = t*A(2) + (1-t)*B(2);
-%point er graph
-plot(A(1),A(2),'ro','LineWidth',2)
-plot(B(1),B(2),'ro','LineWidth',2)
-%line er graph
-plot(X,Y,'k','LineWidth',2)
+%% Convert angle to radian
+theta = deg2rad(theta);
 
-title('(iii) Not Convex: Line goes outside')
+%% Velocity components
+v0y = v0*cos(theta);   % north direction
+v0z = v0*sin(theta);   % vertical direction
 
-%%iv-------------------------------------
-clc; clear; close all;
+%% Time of flight
+T = 2*v0z/g;
 
-[x,y] = meshgrid(linspace(-2,2,200));
-R = (x.^2+y.^2 <= 1);
+%% Time vector
+t = linspace(0, T, 500);
 
-contourf(x,y,R)
-axis equal
-hold on
+%% -------- With Wind --------
+x_wind = x0 + wind*t;
+y_wind = y0 + v0y*t;
+z_wind = z0 + v0z*t - 0.5*g*t.^2;
 
-% Two valid points
-A = [0.33,0.89];
-B = [0.93,-0.37];
+%% -------- Without Wind --------
+x_nowind = x0*ones(size(t));
+y_nowind = y0 + v0y*t;
+z_nowind = z0 + v0z*t - 0.5*g*t.^2;
 
-% Line
-t = linspace(0,1,100);
-X = t*A(1) + (1-t)*B(1);
-Y = t*A(2) + (1-t)*B(2);
-%point er graph
-plot(A(1),A(2),'ro','LineWidth',2)
-plot(B(1),B(2),'ro','LineWidth',2)
-%line er graph
-plot(X,Y,'k','LineWidth',2)
-%% iii------------------------------
-title('(iii) Not Convex: Line goes outside')
-clc; clear; close all;
-
-% Define region
-[x,y,z] = meshgrid(linspace(-2,2,30));
-R = (2*x - y + 3*z <= 2);
-% Plot 3D region
+%% -------- Plot --------
 figure
-isosurface(x,y,z,R,0.5)
+plot3(x_wind, y_wind, z_wind, 'r', 'LineWidth', 2)
 hold on
+plot3(x_nowind, y_nowind, z_nowind, 'b', 'LineWidth', 2)
 
-% Two points in 3D
-A = [-1.44 0.27 1.72];
-B = [0.7 -2 -0.4];
-
-% Line segment
-t = linspace(0,1,100);
-X = (1-t)*A(1) + t*B(1);
-Y = (1-t)*A(2) + t*B(2);
-Z = (1-t)*A(3) + t*B(3);
-
-% Plot line
-plot3(X,Y,Z,'k','LineWidth',2)
-
-% Points
-plot3(A(1),A(2),A(3),'ro')
-plot3(B(1),B(2),B(3),'ro')
-
-xlabel('X'), ylabel('Y'), zlabel('Z')
-title('3D Line Segment Convexity Test')
-axis equal
 grid on
+xlabel('X (East-West)')
+ylabel('Y (North-South)')
+zlabel('Height')
+title('Projectile Motion With and Without Wind')
+legend('With Wind', 'Without Wind')
+
+%% Landing Points Display
+disp('Time of Flight:')
+disp(T)
+
+disp('Landing position with wind:')
+disp([x_wind(end), y_wind(end), z_wind(end)])
+
+disp('Landing position without wind:')
+disp([x_nowind(end), y_nowind(end), z_nowind(end)])
