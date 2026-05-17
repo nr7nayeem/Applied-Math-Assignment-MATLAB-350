@@ -1,1 +1,41 @@
+clc; clear; close all;
 
+% Range
+x = linspace(0,50,400);
+
+% Constraints
+y1 = 50 - 2*x;   % 2x + y <= 50
+y2 = (40 - x)/2; % x + 2y <= 40
+
+% Plot constraints
+figure;
+plot(x, y1, 'r', 'LineWidth', 2);
+hold on;
+plot(x, y2, 'b', 'LineWidth', 2);
+
+% Feasible region (manual shading using polygon)
+x_fill = [0 0 20 25];
+y_fill = [0 20 10 0];
+fill(x_fill, y_fill, 'g', 'FaceAlpha', 0.3);
+
+% Corner points
+plot(25,0,'ko','MarkerFaceColor','k');
+plot(0,20,'ko','MarkerFaceColor','k');
+plot(20,10,'ko','MarkerFaceColor','k');
+plot(0,0,'ko','MarkerFaceColor','k');
+
+% Labels
+xlabel('x = Cake type 1');
+ylabel('y = Cake type 2');
+title('Graphical Solution of Cake Production LP');
+legend('2x+y=50','x+2y=40','Feasible Region','Location','northeast');
+
+grid on;
+axis([0 30 0 25]);
+
+% Objective check
+points = [0 0; 25 0; 0 20; 20 10];
+Z = points(:,1) + points(:,2);
+
+disp('Objective values [x y x+y]:');
+disp([points Z]);
