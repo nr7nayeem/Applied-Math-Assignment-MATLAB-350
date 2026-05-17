@@ -1,41 +1,27 @@
-clc; clear; close all;
+clc;
+clear;
+syms v(x)
 
-% Range
-x = linspace(0,50,400);
+% Given constants
+K = 30;
+m = 1500;
+v0 = 25;      % m/s
 
-% Constraints
-y1 = 50 - 2*x;   % 2x + y <= 50
-y2 = (40 - x)/2; % x + 2y <= 40
+% Define the ODE
+ode = diff(v,x) == - (K/m) * v^2 * (x+1)^3;
 
-% Plot constraints
-figure;
-plot(x, y1, 'r', 'LineWidth', 2);
-hold on;
-plot(x, y2, 'b', 'LineWidth', 2);
+% Initial condition
+cond = v(0) == v0;
 
-% Feasible region (manual shading using polygon)
-x_fill = [0 0 20 25];
-y_fill = [0 20 10 0];
-fill(x_fill, y_fill, 'g', 'FaceAlpha', 0.3);
+% Solve analytically
+vSol = dsolve(ode, cond);
 
-% Corner points
-plot(25,0,'ko','MarkerFaceColor','k');
-plot(0,20,'ko','MarkerFaceColor','k');
-plot(20,10,'ko','MarkerFaceColor','k');
-plot(0,0,'ko','MarkerFaceColor','k');
+% Optional: simplify
+vSol = simplify(vSol)
 
-% Labels
-xlabel('x = Cake type 1');
-ylabel('y = Cake type 2');
-title('Graphical Solution of Cake Production LP');
-legend('2x+y=50','x+2y=40','Feasible Region','Location','northeast');
-
-grid on;
-axis([0 30 0 25]);
-
-% Objective check
-points = [0 0; 25 0; 0 20; 20 10];
-Z = points(:,1) + points(:,2);
-
-disp('Objective values [x y x+y]:');
-disp([points Z]);
+fplot(vSol, [0 3], 'LineWidth',2)
+grid on
+xlabel('Displacement x (m)')
+ylabel('Velocity v (m/s)')
+title('Velocity vs Position (Direct Solution)')
+legend('v(x)')
