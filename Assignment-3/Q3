@@ -1,1 +1,62 @@
+clc;
+clear;
+close all;
+syms x;
+x0=0;
+L=pi;
+t=0.1;
+c=[0,0,0,0,0];
+f=10;
+a2=1.71;
+all_value=1:2:9;
+syms n ;
+c1=(2/L) * int(f * sin((n*pi*x)/L),x,x0,L) ;
+disp(c1) ;
+for k=1:5
+    n=all_value(k) ;
 
+    c(k)=(2/L) * int(f * sin((n*pi*x)/L),x,x0,L) ;
+
+end
+
+
+x=linspace(0,pi,50);
+figure (1) 
+hold on 
+for k=1: 5
+    n=all_value(k) ;
+    u=c(k)* sin(n*pi*x/L) .* exp(-a2 *n^2 *pi^2 *t/L^2);
+    plot(x,u)
+end
+figure (2)
+t=linspace(0,10,50);
+x=linspace(0,pi,50);
+[X,T]=meshgrid(x,t);
+hold on
+u=zeros(size(X));
+for k=1: 5
+    n=all_value(k) ;
+    u=u+c(k)* sin(n*pi*X/L) .* exp(-a2 *n^2 *pi^2 *T/L^2);
+end
+surf(X,T,u) ;
+shading interp
+xlabel('x')
+ylabel('t')
+zlabel('Temperature')
+title('Heat Equation Solution')
+colorbar 
+
+figure (3)
+hold on 
+t=linspace(0,10,500);
+u1=zeros(size(t));
+x1=L/2 ;
+for k=1: 5
+    n=all_value(k) ;
+    u1=u1+c(k)* sin(n*pi*x1/L) .* exp(-a2 *n^2 *pi^2 *t/L^2);
+end
+plot(t,u1,'R','linewidth',2);
+
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                                                                            
