@@ -1,1 +1,110 @@
+clc; clear;
 
+% Parameters
+bG = 1.1; bL = 0.00025;
+dG = 0.0005; dL = 0.7;
+
+% Time settings
+t0 = 0; tf = 25; h = 0.01;
+t = t0:h:tf;
+n = length(t);
+
+% ================== 1. Modified Euler ==================
+NG1 = zeros(1,n); NL1 = zeros(1,n);
+NG1(1)=3000; NL1(1)=500;
+
+for i = 1:n-1
+    fG1 = bG*NG1(i) - dG*NG1(i)*NL1(i);
+    fL1 = bL*NG1(i)*NL1(i) - dL*NL1(i);
+    
+    NGp = NG1(i) + h*fG1;
+    NLp = NL1(i) + h*fL1;
+    
+    fG2 = bG*NGp - dG*NGp*NLp;
+    fL2 = bL*NGp*NLp - dL*NLp;
+    
+    NG1(i+1) = NG1(i) + (h/2)*(fG1+fG2);
+    NL1(i+1) = NL1(i) + (h/2)*(fL1+fL2);
+end
+
+% ================== 2. Taylor Order 4 ==================
+NG2 = zeros(1,n); NL2 = zeros(1,n);
+NG2(1)=3000; NL2(1)=500;
+
+for i = 1:n-1
+    NG1d = bG*NG2(i) - dG*NG2(i)*NL2(i);
+    NL1d = bL*NG2(i)*NL2(i) - dL*NL2(i);
+
+    NG2d = bG*NG1d - dG*(NG1d*NL2(i) + NG2(i)*NL1d);
+    NL2d = bL*(NG1d*NL2(i) + NG2(i)*NL1d) - dL*NL1d;
+
+    NG3d = bG*NG2d - dG*(NG2d*NL2(i)+2*NG1d*NL1d+NG2(i)*NL2d);
+    NL3d = bL*(NG2d*NL2(i)+2*NG1d*NL1d+NG2(i)*NL2d) - dL*NL2d;
+    NG4d = bG*NG3d - dG*(NG3d*NL2(i)+3*NG2d*NL1d+3*NG1d*NL2d+NG2(i)*NL3d);
+    NL4d = bL*(NG3d*NL2(i)+3*NG2d*NL1d+3*NG1d*NL2d+NG2(i)*NL3d) - dL*NL3d;
+
+    NG2(i+1) = NG2(i) + h*NG1d + (h^2/2)*NG2d + (h^3/6)*NG3d + (h^4/24)*NG4d;
+    NL2(i+1) = NL2(i) + h*NL1d + (h^2/2)*NL2d + (h^3/6)*NL3d + (h^4/24)*NL4d;
+end
+
+% ================== 3. RK4 ==================
+NG3 = zeros(1,n); NL3 = zeros(1,n);
+NG3(1)=3000; NL3(1)=500;
+
+fG = @(x,y) bG*x - dG*x*y;
+fL = @(x,y) bL*x*y - dL*y;
+
+for i=1:n-1
+    k1G=fG(NG3(i),NL3(i)); k1L=fL(NG3(i),NL3(i));
+    k2G=fG(NG3(i)+0.5*h*k1G, NL3(i)+0.5*h*k1L);
+    k2L=fL(NG3(i)+0.5*h*k1G, NL3(i)+0.5*h*k1L);
+    k3G=fG(NG3(i)+0.5*h*k2G, NL3(i)+0.5*h*k2L);
+    k3L=fL(NG3(i)+0.5*h*k2G, NL3(i)+0.5*h*k2L);
+    k4G=fG(NG3(i)+h*k3G, NL3(i)+h*k3L);
+    k4L=fL(NG3(i)+h*k3G, NL3(i)+h*k3L);
+
+    NG3(i+1)=NG3(i)+(h/6)*(k1G+2*k2G+2*k3G+k4G);
+    NL3(i+1)=NL3(i)+(h/6)*(k1L+2*k2L+2*k3L+k4L);
+end
+
+% ================== 4. Predictor-Corrector ==================
+NG4 = zeros(1,n); NL4 = zeros(1,n);
+NG4(1)=3000; NL4(1)=500;
+
+% RK4 start
+for i=4:n-1
+    NGp = NG3(i) + h/24*(55*fG(NG3(i),NL3(i)) - 59*fG(NG3(i-1),NL3(i-1)) + 37*fG(NG3(i-2),NL3(i-2)) - 9*fG(NG3(i-3),NL3(i-3)));
+    NLp = NL3(i) + h/24*(55*fL(NG3(i),NL3(i)) - 59*fL(NG3(i-1),NL3(i-1)) + 37*fL(NG3(i-2),NL3(i-2)) - 9*fL(NG3(i-3),NL3(i-3)));
+
+    NG4(i+1)=NG3(i)+h/24*(9*fG(NGp,NLp)+19*fG(NG3(i),NL3(i))-5*fG(NG3(i-1),NL3(i-1))+fG(NG3(i-2),NL3(i-2)));
+    NL4(i+1)=NL3(i)+h/24*(9*fL(NGp,NLp)+19*fL(NG3(i),NL3(i))-5*fL(NG3(i-1),NL3(i-1))+fL(NG3(i-2),NL3(i-2)));
+end
+
+% ================== 5. ode45 ==================
+[t5,Y] = ode45(@(t,Y)[bG*Y(1)-dG*Y(1)*Y(2); bL*Y(1)*Y(2)-dL*Y(2)], [0 25], [3000;500]);
+NG5 = Y(:,1); NL5 = Y(:,2);
+
+% ================== SUBPLOTS ==================
+figure;
+
+subplot(3,2,1)
+plot(t,NG1,'b',t,NL1,'r'); title('Modified Euler'); grid on;
+
+subplot(3,2,2)
+plot(t,NG2,'b',t,NL2,'r'); title('Taylor Order 4'); grid on;
+
+subplot(3,2,3)
+plot(t,NG3,'b',t,NL3,'r'); title('RK4'); grid on;
+
+subplot(3,2,4)
+plot(t,NG4,'b',t,NL4,'r'); title('Predictor-Corrector'); grid on;
+
+subplot(3,2,5)
+plot(t5,NG5,'b',t5,NL5,'r'); title('ode45'); grid on;
+
+% ================== CREATE TABLE ==================
+
+NG5i = interp1(t5, NG5, t);
+NL5i = interp1(t5, NL5, t);
+
+ResultTable = table(t', NG1', NL1', NG2', NL2', NG3', NL3',NG4', NL4', NG5i', NL5i', 'VariableNames', {'t','NG_ModEuler', 'NL_ModEuler', 'NG_Taylor4', 'NL_Taylor4', 'NG_RK4', 'NL_RK4', 'NG_PredictorCorrector', 'NL_PredictorCorrector', 'NG_ode45', 'NL_ode45'})
