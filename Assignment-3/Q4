@@ -1,1 +1,55 @@
+%% solve by characteristics
+clc;
+clear;
+syms x1(t) s
+x = dsolve(diff(x1,t) == 1, x1(0) == s);
+
+syms y1(t) 
+y = dsolve(diff(y1,t) == 3*y1^(2/3), y1(0) == 1);
+y=y(3);
+
+syms u1(t) 
+u= dsolve(diff(u1,t) == 2, u1(0) ==1+s);
+
+syms t y x
+
+t  = y^(1/3) - 1;
+s  = x - t;
+u  = simplify(s + 2*t + 1)
+%% Check the transversality condition
+
+clc;
+clear;
+syms s
+a=1;
+b=3*1^(2/3);
+c=diff(s,s);
+d=diff(1,s);
+D=det([a b ;c d]);
+if (D==0)
+    fprintf('transversality condition not satisfy \n')
+else
+    fprintf('transversality condition satisfy \n')
+end
+
+%% plot
+clc;
+clear
+x=linspace(-2,2,100);
+y=linspace(0,4,100);
+[X,Y]=meshgrid(x,y) ;
+U=X+Y.^(1/3);
+figure
+surf(X,Y,U);
+shading interp;
+hold on
+t=linspace(0,1.5,100);
+as=-2:0.5:2;
+for k=1:length(as)
+    s=as(k);
+    x1=t+s;
+    y1=(t+1).^3;
+    u=x1+y1.^(1/3);
+    plot3(x1,y1,u)
+end
 
