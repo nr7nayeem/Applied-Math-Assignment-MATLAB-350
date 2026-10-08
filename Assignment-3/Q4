@@ -1,4 +1,4 @@
-%% solve by characteristics
+% % solve by characteristics
 clc;
 clear;
 syms x1(t) s
@@ -52,4 +52,3 @@ for k=1:length(as)
     u=x1+y1.^(1/3);
     plot3(x1,y1,u)
 end
-
