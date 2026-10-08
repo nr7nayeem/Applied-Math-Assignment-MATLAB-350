@@ -2,41 +2,33 @@ clc;
 clear;
 close all;
 
-%% Given Data
-v0 = 250;          % initial speed (m/s)
-theta = 65;        % angle (degree)
-g = 9.81;          % gravity (m/s^2)
+v0 = 250;         
+theta = 65;        
+g = 9.81;         
 
-x0 = 3000;         % initial x
-y0 = 0;            % initial y
-z0 = 0;            % initial z
+x0 = 3000;         
+y0 = 0;           
+z0 = 0;          
 
-wind = -30;        % west direction (m/s)
+wind = -30;        
 
-%% Convert angle to radian
-theta = deg2rad(theta);
+v0y = v0*cosd(theta);  
+v0z = v0*sind(theta);  
 
-%% Velocity components
-v0y = v0*cos(theta);   % north direction
-v0z = v0*sin(theta);   % vertical direction
-
-%% Time of flight
+% Time 
 T = 2*v0z/g;
 
-%% Time vector
 t = linspace(0, T, 500);
 
-%% -------- With Wind --------
 x_wind = x0 + wind*t;
 y_wind = y0 + v0y*t;
 z_wind = z0 + v0z*t - 0.5*g*t.^2;
 
-%% -------- Without Wind --------
-x_nowind = x0*ones(size(t));
+% Without Wind 
+x_nowind = x0 + 0*t;
 y_nowind = y0 + v0y*t;
 z_nowind = z0 + v0z*t - 0.5*g*t.^2;
 
-%% -------- Plot --------
 figure
 plot3(x_wind, y_wind, z_wind, 'r', 'LineWidth', 2)
 hold on
@@ -49,7 +41,6 @@ zlabel('Height')
 title('Projectile Motion With and Without Wind')
 legend('With Wind', 'Without Wind')
 
-%% Landing Points Display
 disp('Time of Flight:')
 disp(T)
 
@@ -58,3 +49,4 @@ disp([x_wind(end), y_wind(end), z_wind(end)])
 
 disp('Landing position without wind:')
 disp([x_nowind(end), y_nowind(end), z_nowind(end)])
+
