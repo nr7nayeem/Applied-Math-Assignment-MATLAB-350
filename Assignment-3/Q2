@@ -2,24 +2,21 @@ clc;
 clear;
 syms v(x)
 
-% Given constants
 K = 30;
 m = 1500;
-v0 = 25;      % m/s
+v0 = 25;     
 
-% Define the ODE
 ode = diff(v,x) == - (K/m) * v^2 * (x+1)^3;
 
-% Initial condition
 cond = v(0) == v0;
 
-% Solve analytically
-vSol = dsolve(ode, cond);
+vsol = dsolve(ode, cond);
 
-% Optional: simplify
-vSol = simplify(vSol)
+x=linspace(0,3,100);
+f=matlabFunction(vsol);
+y=f(x);
 
-fplot(vSol, [0 3], 'LineWidth',2)
+plot(x, y, 'LineWidth',2)
 grid on
 xlabel('Displacement x (m)')
 ylabel('Velocity v (m/s)')
